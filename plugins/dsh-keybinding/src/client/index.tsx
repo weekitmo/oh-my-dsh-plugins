@@ -4,6 +4,7 @@ import { KeybindingRuntime } from './keybinding-runtime.tsx'
 import { KeybindingSettingsSection, type KeybindingSettingsSectionProps } from './KeybindingSettingsSection.tsx'
 import { TerminalControl } from './terminal-control.tsx'
 import { TerminalPanel, type TerminalClientContext } from './terminal-panel.tsx'
+import { getTerminalWebFontFamilies, loadTerminalWebFont, normalizeTerminalFontFamily } from './terminal-font.ts'
 import { createTerminalUiStore } from './terminal-store.ts'
 import type { Context, IWorkspaces, ISessions, LayoutClient, PropsLocale, PropsRenderSlots, PropsRuntime, SessionClient } from './types.ts'
 
@@ -25,6 +26,12 @@ export function apply(ctx: Context): void {
   }
   const keybindings = createLocalStorage()
   const terminal = createTerminalUiStore()
+  void loadTerminalWebFont().then(() => {
+    const available = getTerminalWebFontFamilies()
+    if (available.length === 0) return
+    const current = normalizeTerminalFontFamily(terminal.getSnapshot().fontFamily)
+    terminal.setFontFamily(available.includes(current) ? current : available[0] ?? '')
+  })
 
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({
     name: 'shell.overlay', id: 'keybinding-runtime', order: 50,
@@ -36,7 +43,7 @@ export function apply(ctx: Context): void {
     name: 'conversation.input.dock', id: 'embedded-terminal', order: 80,
   }, () => <TerminalPanel context={context} store={terminal} />))
   ctx.slots.inject('settings.section', () => ctx.slots.register({
-    name: 'settings.section', id: 'keybindings', order: 90, label: 'Keybindings',
+    name: 'settings.section', id: 'keybindings', order: 90, label: '快捷键',
     inject: () => ({ storage: keybindings, terminal }),
   }, (props: Record<string, unknown>) => <KeybindingSettingsSection {...props as unknown as KeybindingSettingsSectionProps} />))
 }

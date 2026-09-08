@@ -1,8 +1,10 @@
 /** Host half of the independent DSH Web terminal plugin. */
-import { TerminalManager, type HostConnectionLike, type TerminalManagerOptions, type WebServerLike } from './host/terminal-manager.ts'
+import { TerminalManager, type HostConnectionLike, type TerminalManagerOptions, type TerminalWebFontOptions, type WebServerLike } from './host/terminal-manager.ts'
 
-export type { HostConnectionLike, TerminalManagerOptions, WebServerLike }
+export type { HostConnectionLike, TerminalManagerOptions, TerminalWebFontOptions, WebServerLike }
 export { TerminalManager } from './host/terminal-manager.ts'
+export { TerminalFontCatalog, discoverTerminalFonts, isTerminalMonospaceFont } from './host/terminal-font-catalog.ts'
+export type { TerminalFontCatalogLike, TerminalFontCatalogOptions, TerminalFontSource } from './host/terminal-font-catalog.ts'
 export * from './core/index.ts'
 
 export const name = '@weekit/dsh-keybinding'

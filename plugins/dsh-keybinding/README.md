@@ -73,10 +73,34 @@ covering the right-side workbench. New terminals start in the Workspace that
 contains the current DSH Session; reconnecting an existing terminal preserves
 its running shell and current directory. The renderer inherits DSH color tokens
 and loads regular and bold faces before xterm measures its cells. Its font order
-is the configured family, `Maple Mono NF CN`, DSH's code font, common Nerd Font
-families, and monospace.
+is the selected configured web font, DSH's code font, common Nerd Font
+families, and monospace. It does not hard-code Maple Mono as a default.
 
-Shortcut and terminal appearance editing is available from the `Keybindings`
+Safari and privacy-focused browsers may hide user-installed fonts from CSS. The
+host plugin scans standard operating-system font directories locally, validates
+fixed-width metrics and terminal ASCII coverage with the font's metadata, and
+serves eligible files through authenticated, same-origin routes. Local paths are
+never sent to the browser. A manual font entry remains available for unusual
+install locations or fonts the automatic scan cannot parse:
+
+```yaml
+- id: weekit-keybinding
+  config:
+    webFont:
+      family: Iosevka Nerd Font Mono
+      path: /absolute/path/to/IosevkaNerdFontMono-Regular.ttf
+```
+
+Automatically detected fixed-width families and the optional `family` override
+appear in the custom font list after the page loads. The first eligible font is
+selected automatically unless an eligible choice is already saved. The control
+is disabled only when the host finds no usable fonts. Proportional, hidden,
+bitmap-only, embedding-restricted, oversized, and malformed font files are
+excluded. Supported file extensions are `.ttf`, `.otf`, `.ttc`, `.otc`, `.woff`,
+and `.woff2`; font bytes remain local and are exposed only through the same DSH
+browser authentication fence.
+
+Shortcut and terminal appearance editing is available from the `快捷键`
 page in DSH Web's main Settings dialog. The settings update the active dispatcher
 and terminal immediately. Shortcut bindings persist under
 `dsh-keybinding.keybindings`; terminal font and size persist under

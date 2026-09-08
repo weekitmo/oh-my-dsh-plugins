@@ -1,6 +1,8 @@
 /** Wire protocol shared by the independent DSH Web terminal host and client. */
 
 export const TERMINAL_PATH = '/dsh-terminal/ws'
+export const TERMINAL_FONT_CSS_PATH = '/dsh-terminal/font.css'
+export const TERMINAL_FONT_FILE_PATH = '/dsh-terminal/font-file'
 export const WORKSPACE_OSC = '\u001b]777;dsh-workspace;'
 export const OSC_BEL = '\u0007'
 

@@ -81,12 +81,12 @@ export function ShortcutRecorder({ value, onChange, label }: ShortcutRecorderPro
   }
 
   const displayValue = recording
-    ? preview === '' ? 'Listening for shortcut...' : formatShortcut(preview)
-    : value === '' ? 'Unassigned' : formatShortcut(value)
+    ? preview === '' ? '请按下快捷键…' : formatShortcut(preview)
+    : value === '' ? '未设置' : formatShortcut(value)
 
-  return <label style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(190px, 260px)', gap: 16, alignItems: 'center' }}>
-    <span style={{ color: 'var(--dsw-alias-label-primary)', fontSize: 13 }}>{label}</span>
-    <div style={{ display: 'grid', gap: recording ? 6 : 0 }}>
+  return <label style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
+    <span style={{ minWidth: 0, flex: '1 1 110px', color: 'var(--dsw-alias-label-primary)', fontSize: 13 }}>{label}</span>
+    <div style={{ display: 'grid', minWidth: 0, width: '100%', maxWidth: 260, flex: '1 1 190px', gap: recording ? 6 : 0 }}>
       <input
         ref={inputRef}
         readOnly
@@ -109,13 +109,13 @@ export function ShortcutRecorder({ value, onChange, label }: ShortcutRecorderPro
           font: '500 13px/34px var(--ds-font-family-code)', textAlign: 'left', cursor: 'text', letterSpacing: 0,
         }}
       />
-      {recording && <div aria-label="Shortcut modifiers" style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+      {recording && <div aria-label="快捷键修饰键" style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {MODIFIER_BUTTONS.map(modifier => {
           const selected = selectedModifiers.includes(modifier)
           return <button
             key={modifier}
             type="button"
-            aria-label={`${modifier} modifier`}
+            aria-label={`${modifier} 修饰键`}
             aria-pressed={selected}
             onMouseDown={event => event.preventDefault()}
             onClick={() => toggleModifier(modifier)}

@@ -30,9 +30,9 @@ export interface KeybindingSettingsProps {
 
 function defaultDefinitions(actions: KeybindingActions): readonly KeybindingAction[] {
   return [
-    { id: 'toggleTerminal', label: 'Toggle terminal', defaultBinding: 'Mod+J', run: actions.toggleTerminal },
-    { id: 'focusTerminal', label: 'Focus terminal', defaultBinding: 'Mod+Shift+J', run: actions.focusTerminal },
-    { id: 'newTerminal', label: 'New terminal', defaultBinding: 'Mod+Shift+`', run: actions.newTerminal },
+    { id: 'toggleTerminal', label: '切换终端', defaultBinding: 'Mod+J', run: actions.toggleTerminal },
+    { id: 'focusTerminal', label: '聚焦终端', defaultBinding: 'Mod+Shift+J', run: actions.focusTerminal },
+    { id: 'newTerminal', label: '新建终端', defaultBinding: 'Mod+Shift+`', run: actions.newTerminal },
   ]
 }
 
@@ -86,8 +86,8 @@ export function KeybindingSettings({ storage, actions: suppliedActions, definiti
     if (suppliedBindings === undefined) local.update(next)
     else onBindingsChange?.(next)
   }
-  return <section aria-label="Keyboard shortcuts" style={{ display: 'grid', alignContent: 'start', gap: 12, padding: 16 }}>
-    <h3 style={{ margin: 0 }}>Keyboard shortcuts</h3>
+  return <section aria-label="键盘快捷键" style={{ boxSizing: 'border-box', width: '100%', minWidth: 0, display: 'grid', alignContent: 'start', gap: 12, padding: 16 }}>
+    <h3 style={{ margin: 0 }}>键盘快捷键</h3>
     {definitions.map(definition => <ShortcutRecorder
       key={definition.id}
       label={definition.label}

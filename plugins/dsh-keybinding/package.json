@@ -1,6 +1,6 @@
 {
   "name": "@weekit/dsh-keybinding",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH Web keyboard shortcut manager with an integrated local terminal",
   "packageManager": "pnpm@11.7.0",
   "engines": {
@@ -67,6 +67,7 @@
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+    "fontkit": "^2.0.4",
     "node-pty": "^1.2.0-beta.15",
     "react": "^18.2.0",
     "ws": "^8.21.0"
@@ -74,6 +75,7 @@
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.1.0",
+    "@types/fontkit": "^2.0.9",
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.7",

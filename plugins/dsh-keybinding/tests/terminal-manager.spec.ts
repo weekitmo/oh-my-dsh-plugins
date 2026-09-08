@@ -1,11 +1,12 @@
-import { createServer, type IncomingMessage } from 'node:http'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import WebSocket from 'ws'
 import { afterEach, describe, expect, it } from 'vitest'
 import { TerminalManager, type HostConnectionLike, type WebServerLike } from '../src/host/terminal-manager.ts'
 import type { PtyFactory, PtyLike } from '../src/core/pty.ts'
+import { TERMINAL_FONT_CSS_PATH, TERMINAL_FONT_FILE_PATH } from '../src/core/protocol.ts'
 
 type DataListener = (data: string) => void
 type ExitListener = (event: { exitCode: number; signal?: number }) => void
@@ -89,12 +90,53 @@ describe('TerminalManager', () => {
     cwd = undefined
   })
 
+  it('serves the configured font as an authenticated same-origin web font', async () => {
+    cwd = mkdtempSync(join(tmpdir(), 'dsh-keybinding-font-test-'))
+    const fontPath = join(cwd, 'IosevkaNerdFontMono-Regular.ttf')
+    writeFileSync(fontPath, Buffer.from([0, 1, 2, 3]))
+    const factory = new FakeFactory()
+    manager = new TerminalManager({
+      ptyFactory: factory,
+      webFont: { family: 'Iosevka Nerd Font Mono', path: fontPath },
+      discoverSystemFonts: false,
+    })
+    server = createServer()
+    const webServer: WebServerLike = {
+      register(route) {
+        server?.on('request', (request, response) => {
+          if (new URL(request.url ?? '/', 'http://127.0.0.1').pathname === route.path) void route.handler(request, response)
+        })
+        return () => {}
+      },
+      registerUpgrade() { return () => {} },
+    }
+    unregister = manager.register(webServer, { requestRejection: () => undefined })
+    await new Promise<void>(resolve => server?.listen(0, '127.0.0.1', () => resolve()))
+    const address = server?.address()
+    if (address === null || typeof address === 'string' || address === undefined) throw new Error('server did not bind')
+
+    const css = await fetch(`http://127.0.0.1:${address.port}${TERMINAL_FONT_CSS_PATH}`)
+    expect(css.status).toBe(200)
+    const cssText = await css.text()
+    expect(cssText).toContain('@font-face')
+    expect(cssText).toContain('Iosevka Nerd Font Mono')
+    const fontUrl = cssText.match(/url\("([^\"]+)"\)/)?.[1]
+    if (fontUrl === undefined) throw new Error('font stylesheet did not contain a source URL')
+    expect(fontUrl).toContain(`${TERMINAL_FONT_FILE_PATH}?id=`)
+    const font = await fetch(`http://127.0.0.1:${address.port}${fontUrl}`)
+    expect(font.status).toBe(200)
+    expect([...new Uint8Array(await font.arrayBuffer())]).toEqual([0, 1, 2, 3])
+    const missing = await fetch(`http://127.0.0.1:${address.port}${TERMINAL_FONT_FILE_PATH}?id=missing`)
+    expect(missing.status).toBe(404)
+  })
+
   it('authenticates before upgrade and replays one persistent terminal transcript', async () => {
     cwd = mkdtempSync(join(tmpdir(), 'dsh-keybinding-test-'))
     const factory = new FakeFactory()
     manager = new TerminalManager({ ptyFactory: factory, maxTranscriptBytes: 1024 })
     server = createServer()
     const webServer: WebServerLike = {
+      register() { return () => {} },
       registerUpgrade(route) {
         server?.on('upgrade', (request, socket, head) => {
           if (request.url?.split('?')[0] === route.path) route.handler(request, socket, head)
@@ -147,6 +189,7 @@ describe('TerminalManager', () => {
     manager = new TerminalManager({ ptyFactory: factory })
     server = createServer()
     const webServer: WebServerLike = {
+      register() { return () => {} },
       registerUpgrade(route) {
         server?.on('upgrade', (request, socket, head) => {
           if (request.url?.split('?')[0] === route.path) route.handler(request, socket, head)
