@@ -55,7 +55,7 @@ curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/downloa
 固定版本时，安装器和插件产物应来自同一个 tag：
 
 ```sh
-curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/download/v0.1.0/install.sh | sh -s -- all --version v0.1.0
+curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/download/v0.1.1/install.sh | sh -s -- all --version v0.1.1
 ```
 
 安装器从对应 GitHub Release 下载 `dsh-notify.tgz`、`dsh-trace.tgz` 和 `dsh-keybinding.tgz`，按 `SHA256SUMS` 校验后缓存到 `${DSH_HOME:-~/.dsh}/plugins-cache/oh-my-dsh-plugins/<tag>/`，再加入指定 DSH profile。可以通过 `DSH_PLUGIN_CACHE` 改变缓存根目录。
