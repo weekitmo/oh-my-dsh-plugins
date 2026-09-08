@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+lib/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Local state
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Release staging
+/release/
+
+# Agent planning records
+/plannings/*
+!/plannings/README.md

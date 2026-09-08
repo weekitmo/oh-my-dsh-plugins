@@ -1,0 +1,98 @@
+{
+  "name": "@weekit/dsh-trace",
+  "version": "0.1.1",
+  "description": "A DeepSeek Harness Web plugin for inspecting redacted LLM HTTP request and response traces.",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weekitmo/oh-my-dsh-plugins.git",
+    "directory": "plugins/dsh-trace"
+  },
+  "bugs": {
+    "url": "https://github.com/weekitmo/oh-my-dsh-plugins/issues"
+  },
+  "homepage": "https://github.com/weekitmo/oh-my-dsh-plugins/tree/main/plugins/dsh-trace#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-primitives",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/index.js.map",
+    "lib/client.js",
+    "lib/client.js.map",
+    "cordis.patch.yml",
+    "README.md",
+    "docs/screenshots"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build",
+    "prepack": "pnpm run build"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/schemastery": "3.18.2",
+    "@deepseek-ai/dsh-client-connection": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-session": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-home-paths": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-settings": "0.1.2-alpha.2",
+    "react": "18.3.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/schemastery": "3.18.2",
+    "@deepseek-ai/dsh-client-connection": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-locale": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-session": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-home-paths": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-settings": "0.1.2-alpha.2",
+    "@types/node": "22.20.0",
+    "@types/react": "18.3.31",
+    "esbuild": "0.28.1",
+    "lightningcss": "1.32.0",
+    "react": "18.3.1",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3"
+  }
+}

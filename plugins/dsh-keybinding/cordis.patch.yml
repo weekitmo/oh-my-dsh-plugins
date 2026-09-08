@@ -1,0 +1,6 @@
+# Independent DSH Web terminal bundle.
+# The host row owns the authenticated PTY WebSocket route; the browser row
+# contributes the shell.overlay terminal and configurable action keybindings.
+- insert:
+    - id: weekit-keybinding
+      name: '@weekit/dsh-keybinding'

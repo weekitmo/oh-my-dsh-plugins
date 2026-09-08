@@ -1,0 +1,2 @@
+install.sh text eol=lf
+install.bat text eol=crlf

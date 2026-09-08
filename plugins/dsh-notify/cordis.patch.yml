@@ -1,0 +1,4 @@
+# Mount @weekit/dsh-notify from the profile's resolved node_modules.
+- insert:
+    - id: dsh-notify
+      name: '@weekit/dsh-notify'
