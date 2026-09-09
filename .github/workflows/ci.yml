@@ -19,6 +19,7 @@ jobs:
           - '@weekit/dsh-notify'
           - '@weekit/dsh-trace'
           - '@weekit/dsh-keybinding'
+          - '@weekit/dsh-delegate-agent'
         node-version: ['22.19.0', '24.x']
     steps:
       - name: Checkout

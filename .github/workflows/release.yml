@@ -43,19 +43,21 @@ jobs:
           pnpm --filter @weekit/dsh-notify pack --pack-destination "$PWD/release"
           pnpm --filter @weekit/dsh-trace pack --pack-destination "$PWD/release"
           pnpm --filter @weekit/dsh-keybinding pack --pack-destination "$PWD/release"
+          pnpm --filter @weekit/dsh-delegate-agent pack --pack-destination "$PWD/release"
           mv release/weekit-dsh-notify-*.tgz release/dsh-notify.tgz
           mv release/weekit-dsh-trace-*.tgz release/dsh-trace.tgz
           mv release/weekit-dsh-keybinding-*.tgz release/dsh-keybinding.tgz
+          mv release/weekit-dsh-delegate-agent-*.tgz release/dsh-delegate-agent.tgz
           cp install.sh release/install.sh
           chmod +x release/install.sh
-          (cd release && sha256sum dsh-notify.tgz dsh-trace.tgz dsh-keybinding.tgz install.sh > SHA256SUMS)
+          (cd release && sha256sum dsh-notify.tgz dsh-trace.tgz dsh-keybinding.tgz dsh-delegate-agent.tgz install.sh > SHA256SUMS)
       - name: Verify release assets
         shell: bash
         run: |
           set -euo pipefail
           (cd release && sha256sum -c SHA256SUMS)
-          assets=(dsh-notify.tgz dsh-trace.tgz dsh-keybinding.tgz)
-          packages=(@weekit/dsh-notify @weekit/dsh-trace @weekit/dsh-keybinding)
+          assets=(dsh-notify.tgz dsh-trace.tgz dsh-keybinding.tgz dsh-delegate-agent.tgz)
+          packages=(@weekit/dsh-notify @weekit/dsh-trace @weekit/dsh-keybinding @weekit/dsh-delegate-agent)
           for index in "${!assets[@]}"; do
             archive_listing=$(tar -tzf "release/${assets[$index]}")
             package_manifest=$(tar -xOf "release/${assets[$index]}" package/package.json)

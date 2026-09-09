@@ -9,6 +9,7 @@
 | [通知](plugins/dsh-notify) | `@weekit/dsh-notify` | 桌面、浏览器标题和侧边栏任务完成通知 |
 | [请求追踪](plugins/dsh-trace) | `@weekit/dsh-trace` | 检查脱敏后的 LLM HTTP 请求与响应 |
 | [快捷键与终端](plugins/dsh-keybinding) | `@weekit/dsh-keybinding` | Web 快捷键管理和本地交互终端 |
+| [Agent 委派](plugins/dsh-delegate-agent) | `@weekit/dsh-delegate-agent` | 在 DSH Web 中调度本机 Pi、Codex 和 Grok CLI |
 
 ## 安装
 
@@ -16,7 +17,7 @@
 
 ### 一键安装全部插件
 
-直接执行 GitHub 最新 Release 中的安装器。不指定插件时，默认安装全部三个插件到 `web` profile：
+直接执行 GitHub 最新 Release 中的安装器。不指定插件时，默认安装全部四个插件到 `web` profile：
 
 ```sh
 curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/download/install.sh | sh
@@ -36,6 +37,7 @@ wget -qO- https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/download
 curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/download/install.sh | sh -s -- @weekit/dsh-notify
 curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/download/install.sh | sh -s -- @weekit/dsh-trace
 curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/download/install.sh | sh -s -- @weekit/dsh-keybinding
+curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/download/install.sh | sh -s -- @weekit/dsh-delegate-agent
 ```
 
 ### 指定 Profile
@@ -58,16 +60,17 @@ curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/downloa
 curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/download/v0.1.1/install.sh | sh -s -- all --version v0.1.1
 ```
 
-安装器从对应 GitHub Release 下载 `dsh-notify.tgz`、`dsh-trace.tgz` 和 `dsh-keybinding.tgz`，按 `SHA256SUMS` 校验后缓存到 `${DSH_HOME:-~/.dsh}/plugins-cache/oh-my-dsh-plugins/<tag>/`，再加入指定 DSH profile。可以通过 `DSH_PLUGIN_CACHE` 改变缓存根目录。
+安装器从对应 GitHub Release 下载 `dsh-notify.tgz`、`dsh-trace.tgz`、`dsh-keybinding.tgz` 和 `dsh-delegate-agent.tgz`，按 `SHA256SUMS` 校验后缓存到 `${DSH_HOME:-~/.dsh}/plugins-cache/oh-my-dsh-plugins/<tag>/`，再加入指定 DSH profile。可以通过 `DSH_PLUGIN_CACHE` 改变缓存根目录。
 
-从旧独立仓库版本迁移时，如果 profile 中已经安装过未 scoped 的 `dsh-notify` 或 `dsh-trace`，先按实际存在的旧包执行：
+从旧独立仓库版本迁移时，如果 profile 中已经安装过未 scoped 的 `dsh-notify`、`dsh-trace` 或 `dsh-delegate-agent`，先按实际存在的旧包执行：
 
 ```sh
 dsh plugin --profile web remove dsh-notify
 dsh plugin --profile web remove dsh-trace
+dsh plugin --profile web remove dsh-delegate-agent
 ```
 
-然后再运行新的 Release 安装命令。新版本在 profile 中统一显示为 `@weekit/dsh-notify`、`@weekit/dsh-trace` 和 `@weekit/dsh-keybinding`。
+然后再运行新的 Release 安装命令。新版本在 profile 中统一使用 `@weekit/` scoped 包名。
 
 ### 从源码安装
 
@@ -104,6 +107,7 @@ pnpm clean       # 删除全部插件生成的 lib 和 tsbuildinfo
 ```sh
 pnpm --filter @weekit/dsh-trace check
 pnpm --filter @weekit/dsh-keybinding build
+pnpm --filter @weekit/dsh-delegate-agent check
 ```
 
 构建产物统一写入各插件的 `lib/`。`lib/` 仅用于本地运行和打包，由 Git 忽略，CI 会从源码重新构建。
@@ -117,15 +121,16 @@ git tag -a v0.1.0 -m "oh-my-dsh-plugins v0.1.0"
 git push origin v0.1.0
 ```
 
-workflow 会完成全量检查，构建并打包三个插件，然后发布以下 GitHub Release 资产：
+workflow 会完成全量检查，构建并打包四个插件，然后发布以下 GitHub Release 资产：
 
 - `install.sh`
 - `SHA256SUMS`
 - `dsh-notify.tgz`
 - `dsh-trace.tgz`
 - `dsh-keybinding.tgz`
+- `dsh-delegate-agent.tgz`
 
-三个 tarball 内包含对应插件的 `lib/`，但 `lib/` 和根 `release/` 均不会提交到 Git。
+四个 tarball 内包含对应插件的 `lib/`，但 `lib/` 和根 `release/` 均不会提交到 Git。
 
 ## 扩展插件
 

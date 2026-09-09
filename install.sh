@@ -12,7 +12,7 @@ DRY_RUN=0
 
 usage() {
   cat <<EOF
-Usage: $PROGRAM [all|@weekit/dsh-notify|@weekit/dsh-trace|@weekit/dsh-keybinding] [options]
+Usage: $PROGRAM [all|@weekit/dsh-notify|@weekit/dsh-trace|@weekit/dsh-keybinding|@weekit/dsh-delegate-agent] [options]
 
 Download verified plugin packages from a GitHub Release and install them into
 one DeepSeek Harness profile. With no plugin argument, all plugins are installed.
@@ -38,7 +38,7 @@ select_target() {
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    all|@weekit/dsh-notify|@weekit/dsh-trace|@weekit/dsh-keybinding)
+    all|@weekit/dsh-notify|@weekit/dsh-trace|@weekit/dsh-keybinding|@weekit/dsh-delegate-agent)
       select_target "$1"
       shift
       ;;
@@ -69,10 +69,11 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$TARGET" in
-  all) ASSETS='dsh-notify.tgz dsh-trace.tgz dsh-keybinding.tgz' ;;
+  all) ASSETS='dsh-notify.tgz dsh-trace.tgz dsh-keybinding.tgz dsh-delegate-agent.tgz' ;;
   @weekit/dsh-notify) ASSETS='dsh-notify.tgz' ;;
   @weekit/dsh-trace) ASSETS='dsh-trace.tgz' ;;
   @weekit/dsh-keybinding) ASSETS='dsh-keybinding.tgz' ;;
+  @weekit/dsh-delegate-agent) ASSETS='dsh-delegate-agent.tgz' ;;
 esac
 
 LATEST_URL="https://github.com/$OWNER/$REPO/releases/latest"

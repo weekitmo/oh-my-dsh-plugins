@@ -1,0 +1,5 @@
+# Mount the Host half. The browser half is discovered from package.json#dsh.client.
+- insert:
+    - id: dsh-delegate-agent
+      name: '@weekit/dsh-delegate-agent'
+      config: {}
