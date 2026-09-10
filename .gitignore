@@ -20,3 +20,5 @@ coverage/
 # Agent planning records
 /plannings/*
 !/plannings/README.md
+
+.pi
