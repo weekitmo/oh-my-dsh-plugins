@@ -2,7 +2,10 @@
 
 DSH Web keyboard shortcut plugin with an integrated interactive terminal.
 
-## Scope
+## DSH 版本兼容性
+
+当前版本要求 DeepSeek Harness `>=0.1.5-rc.2`。低于 `0.1.5-rc.2` 的 DSH 请使用旧版发布物 `v0.1.3`，不要安装当前 release 的 tarball。
+
 
 This project does not depend on `dsh-better-sidebar`. It owns its own:
 

@@ -21,7 +21,8 @@ function header(meta: Partial<SessionHeader> = {}, id = 'session-test'): Session
 
 function session(meta: Partial<SessionHeader> = {}, id = 'session-test'): Session {
   const value = header(meta, id)
-  return { id: value.id, header: value, events: [] } as unknown as Session
+  const events: SessionEvent[] = []
+  return { id: value.id, header: value, snapshotEvents: () => events } as unknown as Session
 }
 
 function turnEnd(
@@ -37,7 +38,7 @@ function turnEnd(
 }
 
 function append(sessionValue: Session, event: SessionEvent): void {
-  ;(sessionValue.events as SessionEvent[]).push(event)
+  ;(sessionValue.snapshotEvents() as SessionEvent[]).push(event)
 }
 
 interface MutableAgent extends Omit<Agent, 'status'> {

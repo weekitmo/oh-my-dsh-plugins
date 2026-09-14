@@ -9,7 +9,7 @@ function event(type: string, data: unknown): SessionEvent {
 function fold(events: readonly SessionEvent[], maxBodyChars = 400) {
   let state: NotifyProjectionState = { openTurn: null, last: null }
   for (const item of events) state = applyProjectionEvent(state, item, maxBodyChars)
-  return notifyProjection({ maxBodyChars }).view(state)
+  return notifyProjection({ maxBodyChars }).wire.view(state)
 }
 
 function toolCall(name: string, argumentsValue: unknown, turn = 1, callId = 'call-test'): SessionEvent {

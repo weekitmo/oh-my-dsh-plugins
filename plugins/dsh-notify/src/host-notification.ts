@@ -83,7 +83,7 @@ export function hostNotificationReason(
 
 function turnBody(session: Session, turn: number, maxChars: number): string {
   let body = ''
-  for (const event of session.events) {
+  for (const event of session.snapshotEvents()) {
     if (event.type !== 'assistant/message' || event.data.turn !== turn) continue
     for (const block of event.data.message.content) {
       if (block.type === 'text') body += block.text
@@ -93,7 +93,7 @@ function turnBody(session: Session, turn: number, maxChars: number): string {
 }
 
 function turnStartedAsyncDelegation(session: Session, turn: number): boolean {
-  return turnHasUnsettledAsyncDelegation(session.events, turn)
+  return turnHasUnsettledAsyncDelegation(session.snapshotEvents(), turn)
 }
 
 function liveJob(snapshot: JobSnapshot): boolean {
@@ -101,7 +101,7 @@ function liveJob(snapshot: JobSnapshot): boolean {
 }
 
 function hasActiveGoal(session: Session): boolean {
-  const events = session.events as readonly unknown[]
+  const events = session.snapshotEvents() as readonly unknown[]
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index]
     if (event === null || typeof event !== 'object' || Array.isArray(event)) continue

@@ -65,6 +65,9 @@ export interface AttentionEntry {
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {
+  interface SessionProjectionStateMap {
+    dshNotify: import('./projection.ts').NotifyProjectionState
+  }
   interface SessionProjectionMap {
     dshNotify: NotifyProjectionValue
   }

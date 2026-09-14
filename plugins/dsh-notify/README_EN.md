@@ -6,7 +6,10 @@ English | [简体中文](README.md)
 
 A task status notification plugin for DeepSeek Harness. It provides clear status updates through system notifications, the browser tab title, and the session list when a task is running, completed, or interrupted by an error.
 
-## Features
+## DSH version compatibility
+
+The current release requires DeepSeek Harness `>=0.1.5-rc.2`. For DSH versions below `0.1.5-rc.2`, use the legacy release `v0.1.3` instead of the current release tarball.
+
 
 - **System notifications**: Receive completion, failure, abort, block, or token-limit results only after a top-level task fully settles. Each result type can be disabled separately.
 - **DingTalk robot**: Configure an Access Token and Signing Secret, independently select success/completion or failure/abort messages, and use do-not-disturb with a missed-message summary.

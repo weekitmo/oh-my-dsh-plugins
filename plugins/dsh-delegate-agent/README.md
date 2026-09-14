@@ -2,7 +2,10 @@
 
 在 DSH Web 会话中把任务委派给本机安装的 Pi、Codex 或 Grok CLI。插件通过 DSH 的认证 RPC 接收 Web 操作，通过 `ctx.subprocess` 管理外部进程树，并把任务状态、输出、事件和结果持久化到 `${DSH_HOME:-~/.dsh}/delegate-agent/tasks.json`。
 
-## 功能
+## DSH 版本兼容性
+
+当前版本要求 DeepSeek Harness `>=0.1.5-rc.2`。低于 `0.1.5-rc.2` 的 DSH 请使用旧版发布物 `v0.1.3`，不要安装当前 release 的 tarball。
+
 
 - 从当前 DSH 会话绑定的 workspace 启动任务，浏览器不能伪造其他工作目录。
 - Pi、Codex、Grok 的独立 argv 构造和 JSON/JSONL 协议解析。

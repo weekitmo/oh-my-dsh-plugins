@@ -20,7 +20,8 @@ export const Config = z.object({})
 
 async function resolvedSessionTitle(ctx: Context, session: Session): Promise<string> {
   const existing = ctx.sessionTitle.get(session)
-  const firstCompletedTurn = session.events.filter(event => event.type === 'turn/end').length === 1
+  const events = session.snapshotEvents()
+  const firstCompletedTurn = events.filter(event => event.type === 'turn/end').length === 1
   if (existing !== undefined && (existing.source.kind !== 'fallback' || !firstCompletedTurn)) {
     return existing.title.trim() || String(session.id)
   }

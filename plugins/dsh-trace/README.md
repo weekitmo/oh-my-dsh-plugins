@@ -2,7 +2,9 @@
 
 `@weekit/dsh-trace` 是一个面向 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的 Web 插件，为轨迹旁边增加 **请求追踪** Tab，把大模型请求从“黑盒调用”变成可检查的完整 HTTP 交换记录。
 
-插件当前针对 DSH `0.1.2-alpha.2` 开发，界面沿用 DSH 的设计 Token，支持浅色、深色、跟随系统主题，以及桌面端和移动端布局。
+当前版本要求 DeepSeek Harness `>=0.1.5-rc.2`。低于 `0.1.5-rc.2` 的 DSH 请使用旧版发布物 `v0.1.3`，不要安装当前 release 的 tarball。
+
+
 
 ## 效果预览
 

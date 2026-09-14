@@ -194,18 +194,42 @@ export function applyProjectionEvent(
   }
 }
 
-export function notifyProjection(config: ResolvedConfig): ProjectionDefinition<'dshNotify', NotifyProjectionState> {
+const projectionStateSchema = z.object({
+  openTurn: z.object({
+    turn: z.number().int().nonnegative(),
+    text: z.string(),
+    pendingAsyncDelegations: z.number().int().nonnegative(),
+    collectors: z.record(z.string(), z.string()),
+  }).nullable(),
+  last: z.object({
+    turn: z.number().int().nonnegative(),
+    reason: z.string(),
+    body: z.string(),
+    startedAsyncDelegation: z.boolean(),
+  }).strict().nullable(),
+}).strict()
+
+const projectionViewSchema = z.object({
+  turn: z.number().int().nonnegative(),
+  reason: z.string(),
+  body: z.string(),
+  startedAsyncDelegation: z.boolean(),
+}).strict()
+
+type NotifyProjectionDefinition = Omit<ProjectionDefinition<'dshNotify', NotifyProjectionState>, 'wire'> & {
+  wire: NonNullable<ProjectionDefinition<'dshNotify', NotifyProjectionState>['wire']>
+}
+
+export function notifyProjection(config: ResolvedConfig): NotifyProjectionDefinition {
   return {
     key: 'dshNotify',
-    schema: z.object({
-      turn: z.number().int().nonnegative(),
-      reason: z.string(),
-      body: z.string(),
-      startedAsyncDelegation: z.boolean(),
-    }).strict(),
+    stateSchema: projectionStateSchema,
     init: () => ({ openTurn: null, last: null }),
     apply: (state, event) => applyProjectionEvent(state, event, config.maxBodyChars),
-    view: state => state.last ?? EMPTY_PROJECTION,
+    wire: {
+      viewSchema: projectionViewSchema,
+      view: state => state.last ?? EMPTY_PROJECTION,
+    },
     stateVersion: 2,
   }
 }

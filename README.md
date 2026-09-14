@@ -1,6 +1,6 @@
 # oh-my-dsh-plugins
 
-自用的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 插件集合，使用 pnpm workspace 统一管理。
+自 `v0.1.4` 起，本仓库发布物面向 DeepSeek Harness `>=0.1.5-rc.2`。如果你的 DSH 版本低于 `0.1.5-rc.2`，请使用旧版发布物 `v0.1.3`，不要把当前 release 的 tarball 安装到旧 profile。
 
 ## 插件
 
@@ -57,7 +57,7 @@ curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/latest/downloa
 固定版本时，安装器和插件产物应来自同一个 tag：
 
 ```sh
-curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/download/v0.1.1/install.sh | sh -s -- all --version v0.1.1
+curl -fsSL https://github.com/weekitmo/oh-my-dsh-plugins/releases/download/v0.1.4/install.sh | sh -s -- all --version v0.1.4
 ```
 
 安装器从对应 GitHub Release 下载 `dsh-notify.tgz`、`dsh-trace.tgz`、`dsh-keybinding.tgz` 和 `dsh-delegate-agent.tgz`，按 `SHA256SUMS` 校验后缓存到 `${DSH_HOME:-~/.dsh}/plugins-cache/oh-my-dsh-plugins/<tag>/`，再加入指定 DSH profile。可以通过 `DSH_PLUGIN_CACHE` 改变缓存根目录。
