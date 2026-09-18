@@ -6,7 +6,7 @@ import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-settings'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { installLlmFetchCapture } from './trace/capture.ts'
-import { handleTraceRpc } from './trace/rpc.ts'
+import { registerTraceRoutes } from './trace/routes.ts'
 import { TraceSqliteStore } from './trace/store.ts'
 
 // The target Web profile provides this Host service, but its package is not
@@ -122,9 +122,15 @@ export function apply(ctx: TraceHostContext, config: Config = {}): void {
       maxResponseBodyBytes: resolved.maxResponseBodyBytes,
       onError: error => logger.warn('request trace persistence failed: %s', error),
     })
-    const removeRpc = ctx.connection.rpc.handle('/dsh-trace', (endpoint, payload) => (
-      handleTraceRpc(store, endpoint, payload, workspaceIdForSession)
-    ))
+    // DSH swallows asynchronous effect failures, so a missing route would
+    // otherwise leave the browser half with transport failures and no log line.
+    let removeRoutes: (() => Promise<void>) | undefined
+    try {
+      removeRoutes = registerTraceRoutes(ctx, store, workspaceIdForSession)
+    } catch (error) {
+      logger.error('dsh-trace: request-trace route registration failed: %s', error)
+      throw error
+    }
     const removeLlmListener = ctx.on('llm/stream', (
       options: GenerateOptions,
       next: () => AsyncIterable<StreamChunk>,
@@ -144,7 +150,7 @@ export function apply(ctx: TraceHostContext, config: Config = {}): void {
     return async () => {
       activeStore = undefined
       clearInterval(cleanupTimer)
-      await removeRpc()
+      await removeRoutes?.()
       await removeLlmListener()
       await capture.stop()
       await store.close()

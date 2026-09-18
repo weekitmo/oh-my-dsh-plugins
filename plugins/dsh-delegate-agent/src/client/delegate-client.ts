@@ -1,5 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
+import { API_CHANNEL, delegateRpcAddress, type DelegateRpcEndpoint } from '../rpc-contract.ts'
 import type {
   AdapterDescriptor, AdapterId, DelegatePreset, DelegatePresetInput, DelegateTask, PermissionMode, PublicConfig, TaskList,
 } from '../types.ts'
@@ -62,8 +63,8 @@ function parsePreset(value: unknown): DelegatePreset {
 
 export function createDelegateClient(ctx: Context): DelegateClient {
   const connection = ctx.connection as unknown as ConnectionHandle
-  const call = async (endpoint: string, payload: unknown, signal?: AbortSignal): Promise<unknown> => (
-    rpcValue(await connection.rpc.call('/dsh-delegate-agent', endpoint, payload, signal))
+  const call = async (endpoint: DelegateRpcEndpoint, payload: unknown, signal?: AbortSignal): Promise<unknown> => (
+    rpcValue(await connection.rpc.call(API_CHANNEL, delegateRpcAddress(endpoint), payload, signal))
   )
   return {
     async config(signal) {

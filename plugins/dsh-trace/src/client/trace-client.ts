@@ -1,5 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
+import { API_CHANNEL, traceRpcAddress } from '../rpc-contract.ts'
 import type {
   TraceListCursor, TraceListResult,
   TraceRequestRecord,
@@ -77,7 +78,7 @@ export function createTraceClient(ctx: Context): TraceClient {
   const connection = ctx.connection as unknown as ConnectionHandle
   return {
     async list(sessionId, before, signal) {
-      const result = await connection.rpc.call('/dsh-trace', 'requests.list', {
+      const result = await connection.rpc.call(API_CHANNEL, traceRpcAddress('requests.list'), {
         sessionId,
         limit: 80,
         ...before === undefined ? {} : { before },
@@ -86,11 +87,11 @@ export function createTraceClient(ctx: Context): TraceClient {
     },
     async get(sessionId, id, signal) {
       return parseTraceRequestRecord(rpcValue(
-        await connection.rpc.call('/dsh-trace', 'requests.get', { sessionId, id }, signal),
+        await connection.rpc.call(API_CHANNEL, traceRpcAddress('requests.get'), { sessionId, id }, signal),
       ))
     },
     async clear(sessionId, signal) {
-      rpcValue(await connection.rpc.call('/dsh-trace', 'requests.clear', { sessionId, confirm: true }, signal))
+      rpcValue(await connection.rpc.call(API_CHANNEL, traceRpcAddress('requests.clear'), { sessionId, confirm: true }, signal))
     },
   }
 }

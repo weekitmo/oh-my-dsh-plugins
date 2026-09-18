@@ -2,6 +2,8 @@
 
 自 `v0.1.4` 起，本仓库发布物面向 DeepSeek Harness `>=0.1.5-rc.2`。如果你的 DSH 版本低于 `0.1.5-rc.2`，请使用旧版发布物 `v0.1.3`，不要把当前 release 的 tarball 安装到旧 profile。
 
+`v0.1.5` 修复了 `@weekit/dsh-trace` 与 `@weekit/dsh-delegate-agent` 在 `0.1.5-rc.2` 下 RPC 通道无法注册、浏览器侧始终 `HTTP 405` 的问题（两个插件改用受鉴权的共享 `/api` 通道）；`0.1.5-rc.2` 用户建议升级。
+
 ## 插件
 
 | 插件 | 包名 | 功能 |

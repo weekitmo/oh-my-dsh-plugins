@@ -2,7 +2,8 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-connection'
 import { resolveConfig, Config, type Config as DelegateConfig } from './config.ts'
 import { DelegatePresetStore } from './delegation/preset-store.ts'
-import { handleDelegateRpc, type WorkspaceRegistryLike } from './delegation/rpc.ts'
+import type { WorkspaceRegistryLike } from './delegation/rpc.ts'
+import { registerDelegateRoutes } from './delegation/routes.ts'
 import { DelegationRuntime, type SubprocessRuntimeLike } from './delegation/runtime.ts'
 import { DelegateTaskStore } from './delegation/store.ts'
 
@@ -32,11 +33,17 @@ export function apply(ctx: HostContext, config: DelegateConfig = {}): void {
     const presets = new DelegatePresetStore(resolved.dataDir)
     await Promise.all([store.initialize(), presets.initialize()])
     const runtime = new DelegationRuntime(ctx.subprocess, store, resolved, error => logger.warn(error))
-    const removeRpc = ctx.connection.rpc.handle('/dsh-delegate-agent', (endpoint, payload, signal) => (
-      handleDelegateRpc(runtime, presets, ctx.workspaceRegistry, endpoint, payload, signal)
-    ))
+    // DSH swallows asynchronous effect failures, so a missing route would
+    // otherwise leave the browser half with transport failures and no log line.
+    let removeRoutes: (() => Promise<void>) | undefined
+    try {
+      removeRoutes = registerDelegateRoutes(ctx, runtime, presets, ctx.workspaceRegistry)
+    } catch (error) {
+      logger.error('dsh-delegate-agent: delegation route registration failed: %s', error)
+      throw error
+    }
     return async () => {
-      await removeRpc()
+      await removeRoutes?.()
       await runtime.dispose()
       await Promise.all([store.close(), presets.close()])
     }
