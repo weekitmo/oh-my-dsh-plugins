@@ -1,5 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// Testing Library's automatic cleanup needs vitest globals, which this repo does
+// not enable, so unmount explicitly to keep the worker free of stale roots.
+afterEach(cleanup)
 
 vi.mock('@xterm/xterm', () => ({ Terminal: class {} }))
 vi.mock('@xterm/addon-fit', () => ({ FitAddon: class {} }))

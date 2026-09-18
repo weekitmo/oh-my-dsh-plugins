@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WorkspaceHints, workspaceHintLabels } from '../src/client/workspace-hints.tsx'
 
@@ -24,7 +24,14 @@ function addSidebarTree(items: readonly { name: string; group?: boolean }[]): HT
   return rows
 }
 
-afterEach(() => { document.body.replaceChildren() })
+/**
+ * Testing Library's automatic cleanup only registers when vitest exposes globals
+ * (this repo does not), so unmount the React tree explicitly before wiping the
+ * body. Wiping first detaches the portal container and the later React removal
+ * throws `NotFoundError: The node to be removed is not a child of this node`,
+ * which made the release gate flaky under CI load.
+ */
+afterEach(() => { cleanup(); document.body.replaceChildren() })
 
 describe('workspace and session hints', () => {
   it('assigns home-row labels and expands to fixed-width labels', () => {
