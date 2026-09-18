@@ -12,11 +12,13 @@ The current release requires DeepSeek Harness `>=0.1.5-rc.2`. For DSH versions b
 
 
 - **System notifications**: Receive completion, failure, abort, block, or token-limit results only after a top-level task fully settles. Each result type can be disabled separately.
+- **Waiting-for-approval alerts**: An approval request raises its own system notification the moment it arrives (approval never ends the turn, so it travels the forwarded `approval/request` path instead). Approving or rejecting behaves exactly as before.
+- **Result sounds**: A distinct short clip per outcome — completion, error, abort, block, token limit, and waiting for approval — with a master switch and volume control. Clips are inlined into the client bundle, so playback needs no extra request.
 - **DingTalk robot**: Configure an Access Token and Signing Secret, independently select success/completion or failure/abort messages, and use do-not-disturb with a missed-message summary.
 - **Tab status**: Shows the latest workspace session title while idle, a spinner and session count while running, and an unread result count after completion or failure.
-- **Sidebar indicators**: Shows a green dot for an unread completed session and a red dot for an error, abort, block, or token limit. Opening the session clears the indicator.
+- **Sidebar indicators**: Shows a green dot for an unread completed session, a red dot for an error, abort, block, or token limit, and an amber dot while an approval is waiting. Opening the session clears the indicator.
 - **Native state compatibility**: Active sessions keep the built-in DSH loading state, while approval and question prompts keep their native warning state.
-- **Configurable behavior**: Control notification permissions, tab animation, favicon, spinner, sidebar indicators, and result types under **Settings > Notifications** in the WebUI.
+- **Configurable behavior**: Control notification permissions, tab animation, favicon, spinner, sidebar indicators, result types, and sounds under **Settings > Notifications** in the WebUI.
 
 ## Architecture
 
@@ -101,7 +103,9 @@ Browser settings are stored in `localStorage` for the current site. The defaults
 | Idle tab title animation | On |
 | Hidden-page idle favicon indicator | Off |
 | Green/red sidebar indicators | On |
-| All five result types | On |
+| All six result types (waiting for approval included) | On |
+| Result sounds | On |
+| Result sound volume | 60 (range 0–100; 0 mutes) |
 | Unread result animation | Marquee |
 | DingTalk success/completed messages | On (after credentials are configured) |
 | DingTalk failed/aborted messages | On (includes errors, blocks, and token limits) |
@@ -111,6 +115,21 @@ Browser settings are stored in `localStorage` for the current site. The defaults
 DingTalk credentials and policy are stored in `$DSH_HOME/dsh-notify/settings.json`, never in browser `localStorage`, and the API never returns credentials to the page. Credential management accepts only same-origin WebUI requests over a local loopback address; DingTalk settings cannot be changed through a LAN or public WebUI address. Do not disturb uses `Asia/Shanghai`, supports overnight ranges, and persists held messages in `dingtalk-missed.json` before sending one digest at the end. Ordinary task results also enter this durable queue before delivery and retry after failure or restart. Delivery is at least once: an extreme crash window may duplicate a message, but does not silently lose it. Rotating robot credentials clears the old queue before saving the new credentials, and disabling an outcome category removes matching pending messages. POSIX systems use a `0700` directory and `0600` files; Windows relies on the current user's file ACL while still rejecting symlinks and non-regular files.
 
 The maximum system notification body length can be changed directly in the dsh-notify settings page and takes effect immediately.
+
+### Result sounds
+
+Clips come from Kenney's CC0 public-domain [Interface Sounds](https://kenney.nl/assets/interface-sounds) pack. The originals live in `plugins/dsh-notify/assets/sounds/` with their license note, and the client build inlines each one as a `data:audio/ogg` URL inside `lib/client.js`, so playback makes no extra request and never reads the plugin directory.
+
+| Outcome | Clip |
+| --- | --- |
+| Completed | `confirmation_001.ogg` |
+| Error | `error_001.ogg` |
+| Aborted | `close_002.ogg` |
+| Blocked | `bong_001.ogg` |
+| Token limit | `pluck_001.ogg` |
+| Waiting for approval | `question_002.ogg` |
+
+Each row in the settings page has a **Preview** button that plays the clip regardless of the master switch, so you can listen before enabling. Sounds and system notifications are independent: muting sounds keeps the popups, and disabling popups keeps the sounds. Both follow the outcome switches — a disabled result neither pops nor plays. Browsers may refuse playback before any user interaction (`NotAllowedError`); that case is skipped silently with a console warning.
 
 ## Uninstall
 

@@ -4,11 +4,13 @@
 
 `v0.1.5` 修复了 `@weekit/dsh-trace` 与 `@weekit/dsh-delegate-agent` 在 `0.1.5-rc.2` 下 RPC 通道无法注册、浏览器侧始终 `HTTP 405` 的问题（两个插件改用受鉴权的共享 `/api` 通道）；`0.1.5-rc.2` 用户建议升级。
 
+`v0.1.6` 修复了 `@weekit/dsh-notify` 浏览器通知完全不出现在 `0.1.5-rc.2` + 源码树运行环境下的问题（根因是客户端收敛窗口把裸 `setTimeout` 当方法调用，浏览器抛 `TypeError: Illegal invocation`，Node 测试无法发现），并新增等待授权通知与按结果区分的音效。
+
 ## 插件
 
 | 插件 | 包名 | 功能 |
 | --- | --- | --- |
-| [通知](plugins/dsh-notify) | `@weekit/dsh-notify` | 桌面、浏览器标题和侧边栏任务完成通知 |
+| [通知](plugins/dsh-notify) | `@weekit/dsh-notify` | 桌面、浏览器标题、侧边栏任务状态通知，等待授权提醒与结果音效 |
 | [请求追踪](plugins/dsh-trace) | `@weekit/dsh-trace` | 检查脱敏后的 LLM HTTP 请求与响应 |
 | [快捷键与终端](plugins/dsh-keybinding) | `@weekit/dsh-keybinding` | Web 快捷键管理和本地交互终端 |
 | [Agent 委派](plugins/dsh-delegate-agent) | `@weekit/dsh-delegate-agent` | 在 DSH Web 中调度本机 Pi、Codex 和 Grok CLI |

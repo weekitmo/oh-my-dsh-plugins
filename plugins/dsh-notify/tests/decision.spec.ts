@@ -18,4 +18,13 @@ describe('notification decisions', () => {
     expect(toneOf('blocked')).toBe('error')
     expect(toneOf('max-tokens')).toBe('error')
   })
+
+  it('treats the client-raised approval reason separately from host projections', () => {
+    // `approval` never comes from a turn/end projection; it is raised by the
+    // forwarded approval waterfall, so asReason must keep ignoring it.
+    expect(asReason('approval')).toBeUndefined()
+    expect(toneOf('approval')).toBe('attention')
+    expect(reasonEnabled(defaultNotificationSettings(), 'approval')).toBe(true)
+    expect(reasonEnabled({ ...defaultNotificationSettings(), notifyApproval: false }, 'approval')).toBe(false)
+  })
 })

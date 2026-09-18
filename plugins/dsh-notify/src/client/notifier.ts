@@ -1,4 +1,4 @@
-import type { AttentionEntry, NotificationReason, NotificationSettings } from '../contract.ts'
+import type { AttentionEntry, AttentionReason, NotificationSettings } from '../contract.ts'
 
 export function notificationsApi(): typeof Notification | undefined {
   return typeof Notification === 'undefined' ? undefined : Notification
@@ -54,14 +54,15 @@ export function shouldShowSystem(
   return !settings.backgroundOnly || documentHidden || completedSessionId !== currentSessionId
 }
 
-export function notificationTitleKey(reason: NotificationReason):
-  | 'notify.completed' | 'notify.error' | 'notify.aborted' | 'notify.blocked' | 'notify.maxTokens' {
+export function notificationTitleKey(reason: AttentionReason):
+  | 'notify.completed' | 'notify.error' | 'notify.aborted' | 'notify.blocked' | 'notify.maxTokens' | 'notify.approval' {
   switch (reason) {
     case 'completed': return 'notify.completed'
     case 'error': return 'notify.error'
     case 'aborted': return 'notify.aborted'
     case 'blocked': return 'notify.blocked'
     case 'max-tokens': return 'notify.maxTokens'
+    case 'approval': return 'notify.approval'
   }
 }
 

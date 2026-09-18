@@ -387,4 +387,93 @@ describe('CompletionRunner', () => {
     expect(publish).not.toHaveBeenCalled()
     vi.useRealTimers()
   })
+
+  /**
+   * Regression: the runner used to keep the bare `setTimeout` global and call it
+   * as `this.setTimer(...)`, which binds the runner as receiver — a browser
+   * throws `TypeError: Illegal invocation` there while Node accepts it, so the
+   * 250ms convergence window never elapsed and no result ever published. The
+   * stub below rejects a foreign receiver exactly like a WebIDL timer seat.
+   */
+  it('reschedules the convergence window through the global timer seats', () => {
+    const originalSetTimer = globalThis.setTimeout
+    const originalClearTimer = globalThis.clearTimeout
+    const scheduled: Array<() => void> = []
+    const timers = {
+      setTimer(this: unknown, callback: () => void): ReturnType<typeof setTimeout> {
+        if (this !== globalThis && this !== undefined) throw new TypeError('Illegal invocation')
+        scheduled.push(callback)
+        return scheduled.length as unknown as ReturnType<typeof setTimeout>
+      },
+      clearTimer(this: unknown): void {
+        if (this !== globalThis && this !== undefined) throw new TypeError('Illegal invocation')
+      },
+    }
+    Object.assign(globalThis, {
+      setTimeout: timers.setTimer,
+      clearTimeout: timers.clearTimer,
+    })
+    try {
+      let clock = 1_000
+      const errors: Error[] = []
+      const published: string[] = []
+      const runner = new CompletionRunner(snapshot(), {
+        publish: entry => { published.push(entry.reason) },
+        now: () => clock,
+        onError: error => { errors.push(error) },
+      })
+      runner.update(snapshot({ turn: 1, reason: 'completed' }))
+      expect(errors).toEqual([])
+      expect(scheduled).toHaveLength(1)
+      clock += CONVERGENCE_WINDOW_MS
+      scheduled.shift()?.()
+      expect(errors).toEqual([])
+      expect(published).toEqual(['completed'])
+      runner.dispose()
+    } finally {
+      Object.assign(globalThis, {
+        setTimeout: originalSetTimer,
+        clearTimeout: originalClearTimer,
+      })
+    }
+  })
+
+  it('contains publish and timer faults instead of breaking the caller', () => {
+    const errors: Error[] = []
+    const seen: string[] = []
+    const scheduled: Array<() => void> = []
+    let clock = 5_000
+    let failTimers = false
+    const runner = new CompletionRunner(snapshot(), {
+      publish(entry) {
+        if (entry.reason === 'error') throw new Error('publish exploded')
+        seen.push(entry.reason)
+      },
+      now: () => clock,
+      setTimer: callback => {
+        if (failTimers) throw new TypeError('timer exploded')
+        scheduled.push(callback)
+        return scheduled.length as unknown as ReturnType<typeof setTimeout>
+      },
+      clearTimer: () => {},
+      onError: error => { errors.push(error) },
+    })
+
+    runner.update(snapshot({ turn: 1, reason: 'error' }))
+    clock += CONVERGENCE_WINDOW_MS
+    scheduled.shift()?.()
+    expect(errors.map(error => error.message)).toEqual(['publish exploded'])
+    expect(seen).toEqual([])
+
+    failTimers = true
+    expect(() => { runner.update(snapshot({ turn: 2, reason: 'completed' })) }).not.toThrow()
+    expect(errors.map(error => error.message)).toEqual(['publish exploded', 'timer exploded'])
+
+    failTimers = false
+    runner.update(snapshot({ turn: 3, reason: 'completed' }))
+    clock += CONVERGENCE_WINDOW_MS
+    scheduled.shift()?.()
+    expect(seen).toEqual(['completed'])
+    runner.dispose()
+  })
 })

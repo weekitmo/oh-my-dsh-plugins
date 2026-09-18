@@ -1,9 +1,11 @@
-import type { AttentionEntry, NotificationReason, NotificationSettings } from '../contract.ts'
+import type { AttentionEntry, NotificationSettings } from '../contract.ts'
 import { reasonEnabled } from './decision.ts'
+import { DEFAULT_SOUND_VOLUME, MAX_SOUND_VOLUME, MIN_SOUND_VOLUME, validSoundVolume } from './sounds.ts'
 
 export const DEFAULT_MAX_BODY_CHARS = 400
 export const MIN_MAX_BODY_CHARS = 100
 export const MAX_MAX_BODY_CHARS = 2000
+export { DEFAULT_SOUND_VOLUME, MAX_SOUND_VOLUME, MIN_SOUND_VOLUME, validSoundVolume }
 
 export function validMaxBodyChars(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value)
@@ -27,6 +29,9 @@ export function defaultNotificationSettings(): NotificationSettings {
     notifyAborted: true,
     notifyBlocked: true,
     notifyMaxTokens: true,
+    notifyApproval: true,
+    soundsEnabled: true,
+    soundVolume: DEFAULT_SOUND_VOLUME,
   }
 }
 
@@ -64,6 +69,9 @@ export function normalizeNotificationSettings(value: unknown): NotificationSetti
     notifyAborted: booleanOr(source.notifyAborted, defaults.notifyAborted),
     notifyBlocked: booleanOr(source.notifyBlocked, defaults.notifyBlocked),
     notifyMaxTokens: booleanOr(source.notifyMaxTokens, defaults.notifyMaxTokens),
+    notifyApproval: booleanOr(source.notifyApproval, defaults.notifyApproval),
+    soundsEnabled: booleanOr(source.soundsEnabled, defaults.soundsEnabled),
+    soundVolume: validSoundVolume(source.soundVolume) ? source.soundVolume : defaults.soundVolume,
   }
 }
 
@@ -97,7 +105,6 @@ export function retainAttention(state: AttentionState, sessionIds: ReadonlySet<s
 export function attentionEntries(state: AttentionState): AttentionEntry[] {
   return Object.values(state.bySession).sort((a, b) => a.createdAt - b.createdAt)
 }
-
 export interface RunningSessionSummary {
   readonly id: string
   readonly parentId?: string

@@ -24,6 +24,9 @@ describe('notification state', () => {
       notifyAborted: true,
       notifyBlocked: true,
       notifyMaxTokens: true,
+      notifyApproval: true,
+      soundsEnabled: true,
+      soundVolume: 60,
     })
   })
 

@@ -1,8 +1,28 @@
 import { build } from 'esbuild'
-import { mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { dirname, resolve } from 'node:path'
 
 const clientId = '@weekit/dsh-notify'
+
+/**
+ * Inline result-sound clips as `data:audio/ogg` URLs. esbuild's own `dataurl`
+ * loader labels Ogg files `application/ogg`, which audio elements do not always
+ * decode from a data URL, so the MIME type is set here explicitly.
+ */
+const inlineOggAudio = {
+  name: 'inline-ogg-audio',
+  setup(build) {
+    build.onResolve({ filter: /\.ogg$/ }, args => ({
+      path: args.path.startsWith('.') ? resolve(dirname(args.importer), args.path) : args.path,
+      namespace: 'ogg-inline',
+    }))
+    build.onLoad({ filter: /.*/, namespace: 'ogg-inline' }, args => ({
+      contents: `export default ${JSON.stringify(`data:audio/ogg;base64,${readFileSync(args.path).toString('base64')}`)}`,
+      loader: 'js',
+    }))
+  },
+}
 
 rmSync('lib', { recursive: true, force: true })
 mkdirSync('lib', { recursive: true })
@@ -41,6 +61,8 @@ await build({
   target: ['es2022'],
   sourcemap: true,
   jsx: 'automatic',
+  // Result sounds ship inside the bundle: no extra route, no runtime fetch.
+  plugins: [inlineOggAudio],
   external: [...dshExternal, 'react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'scheduler'],
   banner: { js: `window.__ModuleLoader__.load({ id: ${JSON.stringify(clientId)}, factory: (require) => { var module = { exports: {} }; var exports = module.exports;` },
   footer: { js: 'return module.exports; } });' },

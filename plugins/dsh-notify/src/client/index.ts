@@ -1,12 +1,13 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { AttentionEntry, NotificationReason, NotificationSettings } from '../contract.ts'
-import { reasonEnabled } from './decision.ts'
+import type { AttentionEntry, AttentionReason, NotificationSettings } from '../contract.ts'
+import { reasonEnabled, toneOf } from './decision.ts'
 import { loadDingTalkSettings, saveDingTalkSettings, sendDingTalkTest } from './dingtalk.ts'
 import { FaviconNotifier } from './favicon.ts'
 import { NotifySettingsSection, type SettingsInjected } from './SettingsSection.tsx'
@@ -15,6 +16,7 @@ import { createNotification, notificationBody, NotificationRegistry, notificatio
 import { CompletionRunner, type CompletionListSnapshot } from './runner.ts'
 import { SidebarIndicators } from './sidebar.ts'
 import { SettingsNavBell } from './settings-nav.ts'
+import { SoundPlayer } from './sounds.ts'
 import { attentionEntries, createAttentionStore, createNotificationSettingsStore } from './store.ts'
 import { runningConversationCount } from './state.ts'
 import { adoptStyles } from './styles.ts'
@@ -25,15 +27,41 @@ export const inject = ['sessions', 'slots', 'locale']
 interface SessionsFace {
   readonly list: { getSnapshot(): SessionListState; subscribe(listener: () => void): () => void }
   open(id: SessionId): void
+  scopeOf(ctx: ClientContext): SessionId | undefined
 }
 
-function titleKey(reason: NotificationReason): NotifyKey {
+/**
+ * Client projection of one forwarded `approval/request` (the fields the approval
+ * panel renders; see the approval subsystem's presentation contract). Declared
+ * locally because the client compilation face resolves the forwarded-event
+ * union only for assemblies that import every contributing remote package.
+ */
+interface ApprovalAlertRequest {
+  readonly toolName: string
+  readonly reason?: string
+  readonly signal?: AbortSignal
+}
+
+type ApprovalAlertNext = () => Promise<unknown>
+
+type ApprovalAlertListener = (
+  this: ClientContext,
+  request: ApprovalAlertRequest,
+  next: ApprovalAlertNext,
+) => Promise<unknown>
+
+interface RemotesFace {
+  $on(event: 'approval/request', listener: ApprovalAlertListener): () => void
+}
+
+function titleKey(reason: AttentionReason): NotifyKey {
   switch (reason) {
     case 'completed': return 'title.completed'
     case 'error': return 'title.error'
     case 'aborted': return 'title.aborted'
     case 'blocked': return 'title.blocked'
     case 'max-tokens': return 'title.maxTokens'
+    case 'approval': return 'title.approval'
   }
 }
 
@@ -52,6 +80,7 @@ export function apply(ctx: ClientContext): void {
   const title = new TitleNotifier()
   const favicon = new FaviconNotifier()
   const notifications = new NotificationRegistry()
+  const sounds = new SoundPlayer()
   const sidebar = new SidebarIndicators()
   const settingsNavBell = new SettingsNavBell(document, () => t('nav'))
   sidebar.start()
@@ -79,6 +108,29 @@ export function apply(ctx: ClientContext): void {
       notification.close()
     }
   }
+  const playSound = (reason: AttentionReason): void => {
+    const current = settings.getSnapshot()
+    if (!current.enabled || !current.soundsEnabled || !reasonEnabled(current, reason)) return
+    sounds.play(reason, current.soundVolume)
+  }
+  /** Route one result to every enabled surface: attention state, system notification, sound. */
+  const announce = (entry: AttentionEntry): void => {
+    const current = settings.getSnapshot()
+    if (!current.enabled || !reasonEnabled(current, entry.reason)) return
+    const state = sessions.list.getSnapshot()
+    if (state.current !== entry.sessionId || document.hidden) attention.put(entry)
+    playSound(entry.reason)
+    const permission = notificationsApi()?.permission ?? 'denied'
+    if (shouldShowSystem(permission, current, document.hidden, entry.sessionId, state.current)) show(entry)
+  }
+  /** Display label for one session, used as the approval notification title. */
+  const sessionLabel = (sessionId: string): string => {
+    const state = sessions.list.getSnapshot()
+    return state.byId[sessionId as SessionId]?.displayTitle ?? sessionId
+  }
+  const previewSound = (reason: AttentionReason): void => {
+    sounds.play(reason, settings.getSnapshot().soundVolume)
+  }
   const sendTest = (): void => {
     const api = notificationsApi()
     if (api === undefined || api.permission !== 'granted') return
@@ -87,6 +139,7 @@ export function apply(ctx: ClientContext): void {
       tag: `dsh-notify-test-${String(Date.now())}`,
     })
     if (notification !== undefined) notifications.track(notification)
+    playSound('completed')
   }
 
   const visibleEntries = (): AttentionEntry[] => {
@@ -126,18 +179,7 @@ export function apply(ctx: ClientContext): void {
       initialList as unknown as CompletionListSnapshot,
       {
         publish(entry): void {
-          const currentSettings = settings.getSnapshot()
-          if (!currentSettings.enabled || !reasonEnabled(currentSettings, entry.reason)) return
-          const state = sessions.list.getSnapshot()
-          if (state.current !== entry.sessionId || document.hidden) attention.put(entry)
-          const permission = notificationsApi()?.permission ?? 'denied'
-          if (shouldShowSystem(
-            permission,
-            currentSettings,
-            document.hidden,
-            entry.sessionId,
-            state.current,
-          )) show(entry)
+          announce(entry)
         },
       },
     )
@@ -175,6 +217,7 @@ export function apply(ctx: ClientContext): void {
       stopAttention()
       stopSettings()
       notifications.closeAll()
+      sounds.dispose()
       sidebar.dispose()
       settingsNavBell.dispose()
       favicon.dispose()
@@ -184,6 +227,40 @@ export function apply(ctx: ClientContext): void {
       document.documentElement.removeAttribute('data-dsh-notify-sidebar')
     }
   }, 'dsh-notify: surfaces')
+
+  // Approval alerts need the forwarded Remote Events capability; every other
+  // surface keeps working when a deployment does not mount it.
+  ctx.inject(['remote'], (remoteCtx) => {
+    const remotes = remoteCtx.get('remote') as unknown as RemotesFace
+    remoteCtx.effect(() => remotes.$on('approval/request', function approvalAlert(
+      this: ClientContext,
+      request: ApprovalAlertRequest,
+      next: ApprovalAlertNext,
+    ) {
+      try {
+        if (request.signal?.aborted !== true) {
+          const sessionId = sessions.scopeOf(this)
+          if (sessionId !== undefined) {
+            const reasonText = request.reason?.trim()
+            announce({
+              sessionId: String(sessionId),
+              turn: 0,
+              reason: 'approval',
+              tone: toneOf('approval'),
+              title: sessionLabel(String(sessionId)),
+              body: reasonText === undefined || reasonText === ''
+                ? t('notify.approvalBody', { tool: request.toolName })
+                : `${request.toolName}: ${reasonText}`,
+              createdAt: Date.now(),
+            })
+          }
+        }
+      } catch (error) {
+        console.warn('[dsh-notify] approval alert failed', error)
+      }
+      return next()
+    }), 'dsh-notify: approval alerts')
+  })
 
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section',
@@ -196,6 +273,7 @@ export function apply(ctx: ClientContext): void {
       set,
       requestPermission,
       sendTest,
+      previewSound,
       loadDingTalk: loadDingTalkSettings,
       saveDingTalk: saveDingTalkSettings,
       testDingTalk: sendDingTalkTest,

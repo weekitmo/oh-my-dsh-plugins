@@ -28,6 +28,7 @@ describe('DingTalk settings section', () => {
         set={() => {}}
         requestPermission={async () => 'denied'}
         sendTest={() => {}}
+        previewSound={() => {}}
         loadDingTalk={async () => ({ configured: false, notifyCompleted: true, notifyFailed: true, quietHoursEnabled: false, quietHoursStart: '23:00', quietHoursEnd: '08:00', notifyMissed: false })}
         saveDingTalk={async value => ({ configured: true, ...value })}
         testDingTalk={async () => {}}
@@ -64,6 +65,7 @@ describe('DingTalk settings section', () => {
         set={set}
         requestPermission={async () => 'denied'}
         sendTest={() => {}}
+        previewSound={() => {}}
         loadDingTalk={async () => ({ configured: false, notifyCompleted: true, notifyFailed: true, quietHoursEnabled: false, quietHoursStart: '23:00', quietHoursEnd: '08:00', notifyMissed: false })}
         saveDingTalk={async value => ({ configured: true, ...value })}
         testDingTalk={async () => {}}
@@ -106,6 +108,7 @@ describe('DingTalk settings section', () => {
         set={() => {}}
         requestPermission={async () => 'denied'}
         sendTest={() => {}}
+        previewSound={() => {}}
         loadDingTalk={async () => ({ configured: false, notifyCompleted: true, notifyFailed: true, quietHoursEnabled: false, quietHoursStart: '23:00', quietHoursEnd: '08:00', notifyMissed: false })}
         saveDingTalk={async value => ({ configured: true, ...value })}
         testDingTalk={async () => {}}
@@ -122,6 +125,93 @@ describe('DingTalk settings section', () => {
       '_blank',
       'noopener,noreferrer',
     )
+    act(() => { root.unmount() })
+  })
+})
+
+describe('result sound settings', () => {
+  it('offers one preview per outcome, a master switch, and a validated volume', async () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    const settings = { ...defaultNotificationSettings(), soundsEnabled: false, soundVolume: 60 }
+    const useSettings = <T,>(selector: (value: typeof settings) => T): T => selector(settings)
+    const set = vi.fn()
+    const previewSound = vi.fn()
+    await act(async () => {
+      root.render(<NotifySettingsSection
+        useSettings={useSettings as never}
+        set={set}
+        requestPermission={async () => 'denied'}
+        sendTest={() => {}}
+        previewSound={previewSound}
+        loadDingTalk={async () => ({ configured: false, notifyCompleted: true, notifyFailed: true, quietHoursEnabled: false, quietHoursStart: '23:00', quietHoursEnd: '08:00', notifyMissed: false })}
+        saveDingTalk={async value => ({ configured: true, ...value })}
+        testDingTalk={async () => {}}
+        t={translate as never}
+        close={() => {}}
+      />)
+      await Promise.resolve()
+    })
+
+    const rows = [...host.querySelectorAll<HTMLElement>('.dsh_notify_soundRow')]
+    expect(rows).toHaveLength(6)
+    expect(rows.map(row => row.textContent)).toEqual([
+      zh['settings.outcomes.approval'], zh['settings.outcomes.completed'], zh['settings.outcomes.error'],
+      zh['settings.outcomes.aborted'], zh['settings.outcomes.blocked'], zh['settings.outcomes.maxTokens'],
+    ].map(label => `${label}${zh['settings.sounds.preview']}`))
+
+    act(() => { rows[5]!.querySelector('button')!.click() })
+    expect(previewSound).toHaveBeenCalledWith('max-tokens')
+
+    const master = [...host.querySelectorAll<HTMLLabelElement>('.dsh_notify_toggle')]
+      .find(label => label.textContent?.startsWith(zh['settings.sounds.enabled']))
+    act(() => { master!.querySelector('input')!.click() })
+    expect(set).toHaveBeenCalledWith({ soundsEnabled: true })
+
+    const volume = [...host.querySelectorAll<HTMLInputElement>('.dsh_notify_numberField input')]
+      .find(input => input.max === '100')!
+    const change = (value: string): void => {
+      act(() => {
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
+        setter.call(volume, value)
+        volume.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    }
+    change('150')
+    expect(volume.getAttribute('aria-invalid')).toBe('true')
+    expect(host.textContent).toContain(zh['settings.sounds.volumeError'])
+    change('80')
+    expect(set).toHaveBeenCalledWith({ soundVolume: 80 })
+    act(() => { root.unmount() })
+  })
+
+  it('exposes the approval outcome next to the other results', async () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    const settings = defaultNotificationSettings()
+    const useSettings = <T,>(selector: (value: typeof settings) => T): T => selector(settings)
+    const set = vi.fn()
+    await act(async () => {
+      root.render(<NotifySettingsSection
+        useSettings={useSettings as never}
+        set={set}
+        requestPermission={async () => 'denied'}
+        sendTest={() => {}}
+        previewSound={() => {}}
+        loadDingTalk={async () => ({ configured: false, notifyCompleted: true, notifyFailed: true, quietHoursEnabled: false, quietHoursStart: '23:00', quietHoursEnd: '08:00', notifyMissed: false })}
+        saveDingTalk={async value => ({ configured: true, ...value })}
+        testDingTalk={async () => {}}
+        t={translate as never}
+        close={() => {}}
+      />)
+      await Promise.resolve()
+    })
+    const row = [...host.querySelectorAll<HTMLLabelElement>('.dsh_notify_toggle')]
+      .find(label => label.textContent?.startsWith(zh['settings.outcomes.approval']))!
+    act(() => { row.querySelector('input')!.click() })
+    expect(set).toHaveBeenCalledWith({ notifyApproval: false })
     act(() => { root.unmount() })
   })
 })

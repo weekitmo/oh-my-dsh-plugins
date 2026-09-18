@@ -21,4 +21,7 @@ coverage/
 /plannings/*
 !/plannings/README.md
 
+# Local oh-mem project binding
+/.oh-my-memory/
+
 .pi

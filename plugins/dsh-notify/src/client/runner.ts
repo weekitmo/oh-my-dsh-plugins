@@ -279,13 +279,39 @@ export function advanceCompletionState(
 
 type TimerHandle = ReturnType<typeof setTimeout>
 
+/**
+ * Timer seats resolve through the global scope: a bare `setTimeout` reference
+ * called as `this.setTimer(...)` binds the runner instance as receiver, which
+ * browsers reject with `TypeError: Illegal invocation` (Node tolerates it, so
+ * only the real client surfaces the failure).
+ */
+function defaultSetTimer(callback: () => void, delayMs: number): TimerHandle {
+  return globalThis.setTimeout(callback, delayMs)
+}
+
+function defaultClearTimer(handle: TimerHandle): void {
+  globalThis.clearTimeout(handle)
+}
+
 export interface CompletionRunnerOptions {
   readonly publish: (entry: AttentionEntry) => void
   readonly now?: () => number
   readonly setTimer?: (callback: () => void, delayMs: number) => TimerHandle
   readonly clearTimer?: (handle: TimerHandle) => void
+  /** Failure sink for publish/timer faults; the runner never propagates them. */
+  readonly onError?: (error: Error) => void
 }
 
+/** Report one runner fault without breaking the owning notification loop. */
+function defaultOnError(error: Error): void {
+  console.warn('[dsh-notify] completion runner failed', error)
+}
+
+/**
+ * Client-side completion state machine: folds the harness session-list snapshot
+ * into final attention entries, waiting out a short convergence window so job
+ * settlement and follow-up wake-ups cannot split one task into two results.
+ */
 export class CompletionRunner {
   private state: CompletionState
   private snapshot: CompletionListSnapshot
@@ -293,6 +319,7 @@ export class CompletionRunner {
   private readonly now: () => number
   private readonly setTimer: (callback: () => void, delayMs: number) => TimerHandle
   private readonly clearTimer: (handle: TimerHandle) => void
+  private readonly onError: (error: Error) => void
   private timer: TimerHandle | undefined
   private disposed = false
 
@@ -301,8 +328,9 @@ export class CompletionRunner {
     this.state = seedCompletionState(snapshot)
     this.publish = options.publish
     this.now = options.now ?? Date.now
-    this.setTimer = options.setTimer ?? setTimeout
-    this.clearTimer = options.clearTimer ?? clearTimeout
+    this.setTimer = options.setTimer ?? defaultSetTimer
+    this.clearTimer = options.clearTimer ?? defaultClearTimer
+    this.onError = options.onError ?? defaultOnError
   }
 
   update(snapshot: CompletionListSnapshot): void {
@@ -320,19 +348,45 @@ export class CompletionRunner {
   private evaluate(): void {
     this.cancelTimer()
     const now = this.now()
-    const result = advanceCompletionState(this.state, this.snapshot, now)
+    let result: CompletionAdvance
+    try {
+      result = advanceCompletionState(this.state, this.snapshot, now)
+    } catch (error) {
+      this.report(error)
+      return
+    }
     this.state = result.state
-    for (const entry of result.published) this.publish(entry)
+    for (const entry of result.published) {
+      try {
+        this.publish(entry)
+      } catch (error) {
+        this.report(error)
+      }
+    }
     if (result.nextCheckAt === undefined || this.disposed) return
-    this.timer = this.setTimer(() => {
+    try {
+      this.timer = this.setTimer(() => {
+        this.timer = undefined
+        if (!this.disposed) this.evaluate()
+      }, Math.max(0, result.nextCheckAt - now))
+    } catch (error) {
       this.timer = undefined
-      if (!this.disposed) this.evaluate()
-    }, Math.max(0, result.nextCheckAt - now))
+      this.report(error)
+    }
   }
 
   private cancelTimer(): void {
     if (this.timer === undefined) return
-    this.clearTimer(this.timer)
+    const handle = this.timer
     this.timer = undefined
+    try {
+      this.clearTimer(handle)
+    } catch (error) {
+      this.report(error)
+    }
+  }
+
+  private report(error: unknown): void {
+    this.onError(error instanceof Error ? error : new Error(String(error)))
   }
 }

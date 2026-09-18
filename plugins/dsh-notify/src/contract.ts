@@ -1,8 +1,16 @@
 import type {} from '@deepseek-ai/dsh-session-projection/types'
 
 export type NotificationReason = 'completed' | 'error' | 'aborted' | 'blocked' | 'max-tokens'
-export type AttentionTone = 'success' | 'error'
+/**
+ * Attention reasons the browser client can raise: the host completion reasons
+ * plus `approval` — a pending approval request never ends its turn, so it never
+ * reaches the turn/end-derived set and carries its own client-side trigger.
+ */
+export type AttentionReason = NotificationReason | 'approval'
+export type AttentionTone = 'success' | 'error' | 'attention'
 export type TitleAnimation = 'marquee' | 'blink'
+/** Every outcome an attention entry can carry, in display order. */
+export const ATTENTION_REASONS: readonly AttentionReason[] = ['approval', 'completed', 'error', 'aborted', 'blocked', 'max-tokens']
 
 export interface NotifyProjectionValue {
   readonly turn: number
@@ -52,12 +60,18 @@ export interface NotificationSettings {
   readonly notifyAborted: boolean
   readonly notifyBlocked: boolean
   readonly notifyMaxTokens: boolean
+  /** Notify when an approval request is waiting for the user. */
+  readonly notifyApproval: boolean
+  /** Play a short sound on published results and approval requests. */
+  readonly soundsEnabled: boolean
+  /** Playback volume in percent (0–100). */
+  readonly soundVolume: number
 }
 
 export interface AttentionEntry {
   readonly sessionId: string
   readonly turn: number
-  readonly reason: NotificationReason
+  readonly reason: AttentionReason
   readonly tone: AttentionTone
   readonly title: string
   readonly body: string

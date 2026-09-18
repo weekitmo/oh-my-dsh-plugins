@@ -1,6 +1,6 @@
 {
   "name": "@weekit/dsh-notify",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Unified desktop, browser-title, and sidebar completion notifications for DeepSeek Harness.",
   "license": "MIT",
   "type": "module",
@@ -64,6 +64,7 @@
     }
   },
   "files": [
+    "assets",
     "lib",
     "cordis.patch.yml",
     "README.md",
@@ -81,15 +82,16 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",
     "@deepseek-ai/dsh-agent": "*",
+    "@deepseek-ai/dsh-api-remotes": "*",
     "@deepseek-ai/dsh-api-session-controller": "*",
-    "@deepseek-ai/dsh-client-store": "*",
     "@deepseek-ai/dsh-client-locale": "*",
+    "@deepseek-ai/dsh-client-store": "*",
     "@deepseek-ai/dsh-client-ui-settings": "*",
     "@deepseek-ai/dsh-client-ui-slots": "*",
-    "@deepseek-ai/dsh-invariants": "*",
     "@deepseek-ai/dsh-host-webserver": "*",
-    "@deepseek-ai/dsh-session": "*",
+    "@deepseek-ai/dsh-invariants": "*",
     "@deepseek-ai/dsh-jobs": "*",
+    "@deepseek-ai/dsh-session": "*",
     "@deepseek-ai/dsh-session-projection": "*",
     "@deepseek-ai/dsh-session-title": "*",
     "react": "^18.2.0"
@@ -101,10 +103,31 @@
     "@deepseek-ai/dsh-agent": {
       "optional": true
     },
+    "@deepseek-ai/dsh-api-remotes": {
+      "optional": true
+    },
     "@deepseek-ai/dsh-api-session-controller": {
       "optional": true
     },
+    "@deepseek-ai/dsh-client-locale": {
+      "optional": true
+    },
     "@deepseek-ai/dsh-client-store": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-settings": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-slots": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-host-webserver": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-invariants": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-jobs": {
       "optional": true
     },
     "@deepseek-ai/dsh-session": {
@@ -116,24 +139,6 @@
     "@deepseek-ai/dsh-session-title": {
       "optional": true
     },
-    "@deepseek-ai/dsh-invariants": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-host-webserver": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-jobs": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-client-ui-slots": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-client-ui-settings": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-client-locale": {
-      "optional": true
-    },
     "react": {
       "optional": true
     }
@@ -141,16 +146,17 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.2",
     "@deepseek-ai/dsh-agent": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-api-remotes": "0.1.5-rc.2",
     "@deepseek-ai/dsh-api-session-controller": "0.1.5-rc.2",
     "@deepseek-ai/dsh-client-locale": "0.1.5-rc.2",
     "@deepseek-ai/dsh-client-store": "0.1.5-rc.2",
     "@deepseek-ai/dsh-client-ui-renderer": "0.1.5-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.1.5-rc.2",
     "@deepseek-ai/dsh-client-ui-slots": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-invariants": "0.1.5-rc.2",
     "@deepseek-ai/dsh-host-webserver": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-invariants": "0.1.5-rc.2",
     "@deepseek-ai/dsh-jobs": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
     "@deepseek-ai/dsh-scope": "0.1.5-rc.2",
     "@deepseek-ai/dsh-session": "0.1.5-rc.2",
     "@deepseek-ai/dsh-session-projection": "0.1.5-rc.2",
@@ -162,11 +168,13 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "esbuild": "^0.27.0",
+    "immer": "^10.1.1",
     "jsdom": "29.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "zustand": "~4.4.7"
   },
   "dependencies": {
     "zod": "^4.4.3"

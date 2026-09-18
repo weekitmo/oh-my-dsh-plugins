@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { DingTalkPublicSettings, DingTalkSettingsUpdate, NotificationSettings } from '../contract.ts'
+import type { AttentionReason, DingTalkPublicSettings, DingTalkSettingsUpdate, NotificationSettings } from '../contract.ts'
+import { ATTENTION_REASONS } from '../contract.ts'
 import type { NotifyKey } from './locales.ts'
 import { notificationsApi } from './notifier.ts'
-import { MAX_MAX_BODY_CHARS, MIN_MAX_BODY_CHARS, validMaxBodyChars } from './state.ts'
+import {
+  MAX_MAX_BODY_CHARS, MAX_SOUND_VOLUME, MIN_MAX_BODY_CHARS, MIN_SOUND_VOLUME,
+  validMaxBodyChars, validSoundVolume,
+} from './state.ts'
 
 const DINGTALK_DOCS = 'https://open.dingtalk.com/document/dingstart/custom-bot-creation-and-installation'
 
@@ -13,13 +17,15 @@ export interface SettingsInjected {
   set: (patch: Partial<NotificationSettings>) => void
   requestPermission: () => Promise<NotificationPermission>
   sendTest: () => void
+  /** Play one outcome's clip regardless of the enable switches. */
+  previewSound: (reason: AttentionReason) => void
   loadDingTalk: () => Promise<DingTalkPublicSettings>
   saveDingTalk: (update: DingTalkSettingsUpdate) => Promise<DingTalkPublicSettings>
   testDingTalk: () => Promise<void>
 }
 
 type Props = PropsRuntime<'settings.section'> & InjectFace<SettingsInjected> & PropsLocale<'dsh-notify'>
-type BooleanField = Exclude<keyof NotificationSettings, 'titleAnimation' | 'maxBodyChars'>
+type BooleanField = Exclude<keyof NotificationSettings, 'titleAnimation' | 'maxBodyChars' | 'soundVolume'>
 
 function Toggle({ checked, label, desc, disabled = false, onChange }: {
   checked: boolean
@@ -72,7 +78,81 @@ const OUTCOMES: ReadonlyArray<{ field: BooleanField; key: NotifyKey }> = [
   { field: 'notifyAborted', key: 'settings.outcomes.aborted' },
   { field: 'notifyBlocked', key: 'settings.outcomes.blocked' },
   { field: 'notifyMaxTokens', key: 'settings.outcomes.maxTokens' },
+  { field: 'notifyApproval', key: 'settings.outcomes.approval' },
 ]
+
+const OUTCOME_LABELS: Readonly<Record<AttentionReason, NotifyKey>> = {
+  approval: 'settings.outcomes.approval',
+  completed: 'settings.outcomes.completed',
+  error: 'settings.outcomes.error',
+  aborted: 'settings.outcomes.aborted',
+  blocked: 'settings.outcomes.blocked',
+  'max-tokens': 'settings.outcomes.maxTokens',
+}
+
+function VolumeSetting({ value, set, t }: { value: number; set: SettingsInjected['set']; t: Props['t'] }) {
+  const [input, setInput] = useState(String(value))
+  useEffect(() => { setInput(String(value)) }, [value])
+  const parsed = Number(input)
+  const valid = input.trim() !== '' && validSoundVolume(parsed)
+  return (
+    <label className="dsh_notify_numberField">
+      <span>{t('settings.sounds.volume')}</span>
+      <input
+        type="number"
+        min={MIN_SOUND_VOLUME}
+        max={MAX_SOUND_VOLUME}
+        step={5}
+        value={input}
+        aria-invalid={!valid}
+        aria-describedby="dsh-notify-sound-volume-desc"
+        onChange={event => {
+          const next = event.target.value
+          setInput(next)
+          const number = Number(next)
+          if (next.trim() !== '' && validSoundVolume(number)) set({ soundVolume: number })
+        }}
+      />
+      <small id="dsh-notify-sound-volume-desc" data-error={!valid ? 'true' : 'false'}>
+        {t(valid ? 'settings.sounds.volumeDesc' : 'settings.sounds.volumeError')}
+      </small>
+    </label>
+  )
+}
+
+function SoundSettings({ settings, set, previewSound, t }: Pick<Props, 't'> & {
+  settings: NotificationSettings
+  set: SettingsInjected['set']
+  previewSound: SettingsInjected['previewSound']
+}) {
+  return (
+    <div className="dsh_notify_group">
+      <h3>{t('settings.sounds.title')}</h3>
+      <Toggle
+        checked={settings.soundsEnabled}
+        label={t('settings.sounds.enabled')}
+        desc={t('settings.sounds.enabledDesc')}
+        onChange={checked => { set({ soundsEnabled: checked }) }}
+      />
+      <VolumeSetting value={settings.soundVolume} set={set} t={t} />
+      <div className="dsh_notify_soundList">
+        {ATTENTION_REASONS.map(reason => (
+          <span className="dsh_notify_soundRow" key={reason}>
+            <span>{t(OUTCOME_LABELS[reason])}</span>
+            <button
+              type="button"
+              className="dsh_notify_button"
+              aria-label={`${t('settings.sounds.preview')}: ${t(OUTCOME_LABELS[reason])}`}
+              onClick={() => { previewSound(reason) }}
+            >
+              {t('settings.sounds.preview')}
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function SecretVisibilityIcon({ visible }: { visible: boolean }) {
   return (
@@ -245,7 +325,7 @@ function DingTalkSettings({ loadDingTalk, saveDingTalk, testDingTalk, t }: Pick<
   )
 }
 
-export function NotifySettingsSection({ useSettings, set, requestPermission, sendTest, loadDingTalk, saveDingTalk, testDingTalk, t }: Props) {
+export function NotifySettingsSection({ useSettings, set, requestPermission, sendTest, previewSound, loadDingTalk, saveDingTalk, testDingTalk, t }: Props) {
   const settings = useSettings(value => value)
   const [permission, setPermission] = useState<NotificationPermission>(() => notificationsApi()?.permission ?? 'denied')
   const [hint, setHint] = useState<NotifyKey | null>(null)
@@ -294,6 +374,7 @@ export function NotifySettingsSection({ useSettings, set, requestPermission, sen
         {hint === null ? null : <p className="dsh_notify_hint">{t(hint)}</p>}
       </div>
       <DingTalkSettings loadDingTalk={loadDingTalk} saveDingTalk={saveDingTalk} testDingTalk={testDingTalk} t={t} />
+      <SoundSettings settings={settings} set={set} previewSound={previewSound} t={t} />
       <div className="dsh_notify_group">
         <h3>{t('settings.titleSurface.title')}</h3>
         <Toggle checked={settings.titleNotifications} label={t('settings.titleSurface.enabled')} onChange={checked => { change('titleNotifications', checked) }} />

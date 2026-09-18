@@ -1,0 +1,21 @@
+Result sounds bundled by the `@weekit/dsh-notify` web client.
+
+Source: Kenney "Interface Sounds" (https://kenney.nl/assets/interface-sounds)
+License: CC0 1.0 Universal (public domain dedication) — see
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Files and the outcome each one voices:
+
+| File                 | Outcome            |
+| -------------------- | ------------------ |
+| confirmation_001.ogg | completed          |
+| error_001.ogg        | error              |
+| close_002.ogg        | aborted            |
+| bong_001.ogg         | blocked            |
+| pluck_001.ogg        | max-tokens         |
+| question_002.ogg     | approval (waiting) |
+
+The client build inlines every clip into `lib/client.js` as a `data:` URL
+(`esbuild --loader:.ogg=dataurl`), so playback needs no extra route, no
+network fetch, and no filesystem access at runtime. These originals stay in the
+package so the sources and their licensing travel with the release tarball.

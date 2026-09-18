@@ -25,6 +25,9 @@ export const cssText = `
 .dsh_notify_segment { display:inline-flex; align-self:flex-start; gap:4px; }
 .dsh_notify_segment button[aria-pressed='true'] { border-color:var(--dsw-alias-brand-primary); background:var(--dsw-alias-interactive-bg-hover); }
 .dsh_notify_outcomes { display:flex; flex-wrap:wrap; gap:10px 22px; }
+.dsh_notify_soundList { display:flex; flex-wrap:wrap; gap:8px 14px; }
+.dsh_notify_soundRow { display:inline-flex; align-items:center; gap:8px; color:var(--dsw-alias-label-secondary); font-size:13px; }
+.dsh_notify_soundRow .dsh_notify_button { min-height:26px; padding:0 10px; font-size:12px; }
 .dsh_notify_toggle[data-disabled='true'] { cursor:not-allowed; opacity:.55; }
 .dsh_notify_groupHeading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .dsh_notify_groupHeading > div { min-width:0; }
@@ -52,7 +55,8 @@ export const cssText = `
 .dsh_notify_button { min-height:32px; padding:0 12px; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); cursor:pointer; }
 .dsh_notify_button:hover:not(:disabled) { background:var(--dsw-alias-interactive-bg-hover); }
 .dsh_notify_button:disabled { cursor:not-allowed; opacity:.5; }
-.dsh_notify_buttonPrimary { border-color:var(--dsw-alias-brand-primary); background:var(--dsw-alias-brand-primary); color:white; }
+.dsh_notify_buttonPrimary { border-color:transparent; background:var(--dsw-alias-button-primary-fill,var(--dsw-alias-brand-primary,var(--dsw-alias-label-primary))); color:var(--dsw-alias-label-primary-foreground,var(--dsw-alias-bg-base,#fff)); }
+.dsh_notify_buttonPrimary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,var(--dsw-alias-interactive-bg-hover)); }
 .dsh_notify_buttonDanger { color:var(--dsw-alias-state-error-primary); }
 .dsh_notify_feedback { margin:0; font-size:13px; line-height:19px; color:var(--dsw-alias-state-success-primary); }
 .dsh_notify_feedback[data-tone='error'] { color:var(--dsw-alias-state-error-primary); }
@@ -63,6 +67,7 @@ export const cssText = `
 .dsh_notify_indicatorHost > [data-state] { display:none !important; }
 [data-dsh-notify-indicator] { position:relative; display:inline-block; width:10px; height:10px; color:var(--dsw-alias-state-success-primary); }
 [data-dsh-notify-indicator][data-tone='error'] { color:var(--dsw-alias-state-error-primary); }
+[data-dsh-notify-indicator][data-tone='attention'] { color:var(--dsw-alias-state-warn-primary); }
 [data-dsh-notify-indicator]::before, [data-dsh-notify-indicator]::after { content:''; position:absolute; border-radius:50%; background:currentColor; }
 [data-dsh-notify-indicator]::before { inset:2px; }
 [data-dsh-notify-indicator]::after { inset:0; opacity:.18; animation:dsh-notify-pulse 1.5s ease-out infinite; }

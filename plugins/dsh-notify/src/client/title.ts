@@ -1,6 +1,6 @@
-import type { AttentionEntry, NotificationReason, TitleAnimation } from '../contract.ts'
+import type { AttentionEntry, AttentionReason, TitleAnimation } from '../contract.ts'
 
-export type ReasonLabel = (reason: NotificationReason, count: number) => string
+export type ReasonLabel = (reason: AttentionReason, count: number) => string
 
 export interface WorkspaceSessionTitleSummary {
   readonly displayTitle: string
@@ -25,7 +25,7 @@ export function recentWorkspaceSessionTitle(
   return value === '' ? undefined : value
 }
 
-const REASON_ORDER: readonly NotificationReason[] = ['completed', 'error', 'aborted', 'blocked', 'max-tokens']
+const REASON_ORDER: readonly AttentionReason[] = ['approval', 'completed', 'error', 'aborted', 'blocked', 'max-tokens']
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'] as const
 
 export function aggregatedTitle(
@@ -34,7 +34,7 @@ export function aggregatedTitle(
   runningCount = 0,
   runningLabel: (count: number) => string = count => `${String(count)} running`,
 ): string {
-  const counts = new Map<NotificationReason, number>()
+  const counts = new Map<AttentionReason, number>()
   for (const entry of entries) counts.set(entry.reason, (counts.get(entry.reason) ?? 0) + 1)
   const parts = runningCount > 0 ? [runningLabel(runningCount)] : []
   for (const reason of REASON_ORDER) {

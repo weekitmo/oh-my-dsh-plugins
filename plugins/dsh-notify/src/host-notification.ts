@@ -141,8 +141,11 @@ export class HostNotificationCoordinator {
     this.sessions = options.sessions
     this.publish = options.publish
     this.maxBodyChars = options.maxBodyChars ?? 2000
-    this.setTimer = options.setTimer ?? setTimeout
-    this.clearTimer = options.clearTimer ?? clearTimeout
+    // Resolve through the global scope: a bare `setTimeout` reference invoked
+    // as a method binds the coordinator as receiver, which WebIDL timer seats
+    // reject in browser-like hosts (Node tolerates it, hiding the fault).
+    this.setTimer = options.setTimer ?? ((callback, delayMs) => globalThis.setTimeout(callback, delayMs))
+    this.clearTimer = options.clearTimer ?? (handle => { globalThis.clearTimeout(handle) })
     this.onError = options.onError ?? (() => {})
     for (const agent of this.agents.list()) this.statuses.set(String(agent.id), agent.status)
   }
